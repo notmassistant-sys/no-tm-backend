@@ -1,30 +1,58 @@
-const express = require("express");
-const bodyParser = require("body-parser");
+import express from "express";
+import fetch from "node-fetch";
 
 const app = express();
-app.use(bodyParser.json());
+app.use(express.json());
 
-const VERIFY_TOKEN = "notm_verify_token";
+const PORT = process.env.PORT || 3000;
+const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 
-app.get("/webhook", (req, res) => {
-  const mode = req.query["hub.mode"];
-  const token = req.query["hub.verify_token"];
-  const challenge = req.query["hub.challenge"];
+app.post("/webhook", async (req, res) => {
+  try {
+    const { mensagem } = req.body;
 
-  if (mode === "subscribe" && token === VERIFY_TOKEN) {
-    console.log("Webhook verificado com sucesso");
-    res.status(200).send(challenge);
-  } else {
-    res.sendStatus(403);
+    if (!mensagem) {
+      return res.status(400).json({ erro: "Mensagem não enviada" });
+    }
+
+    const prompt = `
+Você é o assistente NO TM.
+Gere 3 respostas para a mensagem abaixo:
+
+Mensagem:
+"${mensagem}"
+
+Regras:
+1. Resposta educada
+2. Resposta firme
+3. Resposta profissional
+    `;
+
+    const response = await fetch("https://api.openai.com/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${OPENAI_API_KEY}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        model: "gpt-4o-mini",
+        messages: [{ role: "user", content: prompt }],
+        temperature: 0.7
+      })
+    });
+
+    const data = await response.json();
+
+    res.json({
+      respostas: data.choices[0].message.content
+    });
+
+  } catch (erro) {
+    console.error(erro);
+    res.status(500).json({ erro: "Erro interno" });
   }
 });
 
-app.post("/webhook", (req, res) => {
-  console.log("Mensagem recebida:");
-  console.log(JSON.stringify(req.body, null, 2));
-  res.sendStatus(200);
-});
-
-app.listen(3000, () => {
-  console.log("Servidor rodando na porta 3000");
+app.listen(PORT, () => {
+  console.log(`Servidor rodando na porta ${PORT}`);
 });
