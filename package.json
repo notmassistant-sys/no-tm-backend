@@ -1,18 +1,15 @@
 {
   "name": "no-tm-backend",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "NO TM backend",
+  "main": "server.js",
+  "type": "module",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node server.js"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "type": "commonjs",
   "dependencies": {
-    "body-parser": "^2.2.2",
+    "express": "^5.2.1",
     "dotenv": "^17.2.4",
-    "express": "^5.2.1"
+    "body-parser": "^2.2.2"
   }
 }
